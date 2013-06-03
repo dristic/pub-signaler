@@ -3,3 +3,5 @@ pubnub = PUBNUB.init
   subscribe_key: 'demo'
 
 console.log "Hello World!"
+
+console.log "This is new code!"
