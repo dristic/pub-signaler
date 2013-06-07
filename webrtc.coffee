@@ -38,6 +38,7 @@ navigator.webkitGetUserMedia { audio: true, video: true }, (stream) ->
 # Make Peer Connection
 signalingChannel = createSignalingChannel()
 pc = null
+dc = null
 configuration = null
 remoteView = document.querySelector '#remote'
 iceCandidates = []
@@ -47,8 +48,12 @@ gotDescription = (desc) ->
   signalingChannel.send { "sdp": desc }
 
 start = (isCaller) ->
-  pc = new webkitRTCPeerConnection(configuration)
+  pc = new webkitRTCPeerConnection(configuration, {optional:[{RtpDataChannels:true}]})
   pc.addStream localStream
+  dc = pc.createDataChannel "mylabel", { reliable: false }
+
+  dc.onmessage = (event) ->
+    console.log "Got message: #{event.data}"
 
   pc.onicecandidate = (evt) ->
     signalingChannel.send { "candidate": evt.candidate }
@@ -57,6 +62,10 @@ start = (isCaller) ->
     console.log "Got stream"
     remoteView.src = URL.createObjectURL evt.stream
     remoteView.play()
+
+    sendMessage = () ->
+      dc.send 'Hello World!'
+    setTimeout sendMessage, 10000
 
   if isCaller
     pc.createOffer gotDescription
